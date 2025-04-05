@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -52,9 +53,7 @@
 <body>
   <h1>Treino Semanal</h1>
   <p style="text-align:center">Jiu-Jitsu + Condicionamento</p>
-
   <div id="treinos"></div>
-
   <script>
     const treinos = {
       "Segunda": [
@@ -99,9 +98,7 @@
         "Sprints: 5x 40-60m com 1min de descanso ativo"
       ]
     };
-
     const container = document.getElementById("treinos");
-
     for (const [dia, exercicios] of Object.entries(treinos)) {
       const bloco = document.createElement("div");
       bloco.className = "dia";
@@ -117,13 +114,11 @@
       bloco.innerHTML = titulo + lista + anotacoes;
       container.appendChild(bloco);
     }
-
     document.querySelectorAll('input[type="checkbox"]').forEach(input => {
       input.addEventListener('change', () => {
         localStorage.setItem(input.id, input.checked);
       });
     });
-
     document.querySelectorAll('textarea').forEach(area => {
       area.addEventListener('input', () => {
         localStorage.setItem(area.id, area.value);
