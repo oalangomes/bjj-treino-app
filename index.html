@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -107,11 +106,29 @@
       const bloco = document.createElement("div");
       bloco.className = "dia";
       const titulo = `<div class='titulo-dia'>${dia}</div>`;
-      const lista = `<ul>${exercicios.map(ex => `<li><label><input type='checkbox'>${ex}</label></li>`).join('')}</ul>`;
-      const anotacoes = `<textarea rows="2" placeholder="Anotações..."></textarea>`;
+      const lista = `<ul>${exercicios.map((ex, i) => {
+        const id = `${dia}-${i}`;
+        const checked = localStorage.getItem(id) === 'true' ? 'checked' : '';
+        return `<li><label><input type='checkbox' id='${id}' ${checked}>${ex}</label></li>`;
+      }).join('')}</ul>`;
+      const anotacoesId = `notes-${dia}`;
+      const savedNotes = localStorage.getItem(anotacoesId) || "";
+      const anotacoes = `<textarea rows="2" placeholder="Anotações..." id="${anotacoesId}">${savedNotes}</textarea>`;
       bloco.innerHTML = titulo + lista + anotacoes;
       container.appendChild(bloco);
     }
+
+    document.querySelectorAll('input[type="checkbox"]').forEach(input => {
+      input.addEventListener('change', () => {
+        localStorage.setItem(input.id, input.checked);
+      });
+    });
+
+    document.querySelectorAll('textarea').forEach(area => {
+      area.addEventListener('input', () => {
+        localStorage.setItem(area.id, area.value);
+      });
+    });
   </script>
 </body>
 </html>
