@@ -1,16 +1,16 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Treino Semanal Jiu-Jitsu</title>
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="manifest.json" />
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js');
     }
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -48,57 +48,58 @@
       border: 1px solid #ccc;
       font-size: 14px;
     }
+    button {
+      margin: 4px 2px;
+      padding: 10px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      background: #004085;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #002b5c;
+    }
   </style>
 </head>
 <body>
   <h1>Treino Semanal</h1>
   <p style="text-align:center">Jiu-Jitsu + Condicionamento</p>
+
+  <div id="botoes"></div>
   <div id="treinos"></div>
+
+  <div id="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000a; color:#000; padding:20px; overflow:auto; z-index:1000">
+    <div style="background:#fff; padding:20px; border-radius:10px">
+      <button onclick="fecharModal()" style="float:right">Fechar</button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
   <script>
     const treinos = {
-      "Segunda": [
-        "Wall Angels (3x15)",
-        "Rotação externa com elástico (2x15)",
-        "Y-T-W com halteres 4kg (10 reps cada)",
-        "Pegada: borracha + aparelho de apertar (até falha)"
-      ],
-      "Terça": [
-        "Agachamento com barra/triângulo (3x10)",
-        "Ponte unilateral (3x10 por perna)",
-        "Passada com halteres (3x12)",
-        "Prancha com abdução elástica (3x30s)",
-        "Adutor com elástico (3x15 por perna)",
-        "Prancha frontal + lateral (3x30s)"
-      ],
-      "Quarta": [
-        "Abdominal inclinado na praça (3x15)",
-        "Canivete ou prancha com braço elevado (3x)",
-        "Pegada com borracha + aparelho (até fadiga)",
-        "Pegada isométrica com toalha (2x30s)"
-      ],
-      "Quinta": [
-        "Mobilidade escapular e quadril (2 min)",
-        "Pular corda/base de luta (3 min)",
-        "Shrimp + Upa + Sit-through (2 voltas, 1 min cada)",
-        "Saco: 1 min socos + 10 burpees (3x)",
-        "Prancha dinâmica (2x30s)",
-        "Corrida HIIT: 30s forte / 1min leve (5x), aquecer/desaquecer leve"
-      ],
-      "Sexta": [
-        "Elástico para rotação ombro (2x15)",
-        "Shrug + retração escapular (2x15)",
-        "Pegada com borracha e aparelho (até falha)",
-        "Respiração + alongamento escapular (3 min)"
-      ],
-      "Sábado": [
-        "3x10 Shrimp, Upa e Transição guarda-montada",
-        "3x Kimura solo (lado saudável)",
-        "Stiff leve + adutor com elástico – 3x10",
-        "Prancha + alongamento dinâmico (3 min)",
-        "Sprints: 5x 40-60m com 1min de descanso ativo"
-      ]
+      "Segunda": ["Wall Angels (3x15)", "Rotação externa com elástico (2x15)", "Y-T-W com halteres 4kg (10 reps cada)", "Pegada: borracha + aparelho de apertar (até falha)"],
+      "Terça": ["Agachamento com barra/triângulo (3x10)", "Ponte unilateral (3x10 por perna)", "Passada com halteres (3x12)", "Prancha com abdução elástica (3x30s)", "Adutor com elástico (3x15 por perna)", "Prancha frontal + lateral (3x30s)"],
+      "Quarta": ["Abdominal inclinado na praça (3x15)", "Canivete ou prancha com braço elevado (3x)", "Pegada com borracha + aparelho (até fadiga)", "Pegada isométrica com toalha (2x30s)"],
+      "Quinta": ["Mobilidade escapular e quadril (2 min)", "Pular corda/base de luta (3 min)", "Shrimp + Upa + Sit-through (2 voltas, 1 min cada)", "Saco: 1 min socos + 10 burpees (3x)", "Prancha dinâmica (2x30s)", "Corrida HIIT: 30s forte / 1min leve (5x), aquecer/desaquecer leve"],
+      "Sexta": ["Elástico para rotação ombro (2x15)", "Shrug + retração escapular (2x15)", "Pegada com borracha e aparelho (até falha)", "Respiração + alongamento escapular (3 min)"],
+      "Sábado": ["3x10 Shrimp, Upa e Transição guarda-montada", "3x Kimura solo (lado saudável)", "Stiff leve + adutor com elástico – 3x10", "Prancha + alongamento dinâmico (3 min)", "Sprints: 5x 40-60m com 1min de descanso ativo"]
     };
+
     const container = document.getElementById("treinos");
+    const botoes = document.getElementById("botoes");
+    const hoje = new Date().toISOString().slice(0, 10);
+    const historicoKey = `hist-${hoje}`;
+    let historicoHoje = JSON.parse(localStorage.getItem(historicoKey) || "{}");
+
+    botoes.innerHTML = `
+      <button onclick="verHistoricoHoje()">Ver histórico de hoje</button>
+      <button onclick="mostrarGrafico()">Gráfico semanal</button>
+      <button onclick="verHistoricoCompleto()">Ver histórico completo</button>
+      <button onclick="exportarTXT()">Exportar .txt</button>
+    `;
+
     for (const [dia, exercicios] of Object.entries(treinos)) {
       const bloco = document.createElement("div");
       bloco.className = "dia";
@@ -106,24 +107,124 @@
       const lista = `<ul>${exercicios.map((ex, i) => {
         const id = `${dia}-${i}`;
         const checked = localStorage.getItem(id) === 'true' ? 'checked' : '';
-        return `<li><label><input type='checkbox' id='${id}' ${checked}>${ex}</label></li>`;
+        return `<li><label><input type='checkbox' id='${id}' data-dia='${dia}' data-idx='${i}' ${checked}>${ex}</label></li>`;
       }).join('')}</ul>`;
       const anotacoesId = `notes-${dia}`;
       const savedNotes = localStorage.getItem(anotacoesId) || "";
-      const anotacoes = `<textarea rows="2" placeholder="Anotações..." id="${anotacoesId}">${savedNotes}</textarea>`;
+      const anotacoes = `<textarea rows="2" placeholder="Anotações..." id="${anotacoesId}" data-dia="${dia}">${savedNotes}</textarea>`;
       bloco.innerHTML = titulo + lista + anotacoes;
       container.appendChild(bloco);
     }
+
+    function salvarHistoricoDoDia(dia) {
+      const checks = [];
+      document.querySelectorAll(`input[type="checkbox"][data-dia="${dia}"]`).forEach(input => {
+        checks.push(input.checked);
+      });
+      const nota = document.getElementById(`notes-${dia}`)?.value || "";
+      historicoHoje[dia] = { checks, nota };
+      localStorage.setItem(historicoKey, JSON.stringify(historicoHoje));
+    }
+
     document.querySelectorAll('input[type="checkbox"]').forEach(input => {
       input.addEventListener('change', () => {
         localStorage.setItem(input.id, input.checked);
+        salvarHistoricoDoDia(input.dataset.dia);
       });
     });
+
     document.querySelectorAll('textarea').forEach(area => {
       area.addEventListener('input', () => {
         localStorage.setItem(area.id, area.value);
+        salvarHistoricoDoDia(area.dataset.dia);
       });
     });
+
+    function abrirModal(html) {
+      document.getElementById('modal-content').innerHTML = html;
+      document.getElementById('modal').style.display = 'block';
+    }
+
+    function fecharModal() {
+      document.getElementById('modal').style.display = 'none';
+    }
+
+    function verHistoricoHoje() {
+      let resumo = `===== Histórico de ${hoje} =====\\n`;
+      for (const [dia, dados] of Object.entries(historicoHoje)) {
+        resumo += `\\n${dia}:\\n`;
+        if (!dados || !Array.isArray(dados.checks)) continue;
+        dados.checks.forEach((feito, i) => {
+          const status = feito ? "✓" : "☐";
+          resumo += `  ${status} ${treinos[dia][i]}\\n`;
+        });
+        resumo += `Notas: ${dados.nota || "(vazio)"}\\n`;
+      }
+      alert(resumo);
+    }
+
+    function mostrarGrafico() {
+      const dias = Object.keys(treinos);
+      const dados = dias.map(dia => {
+        let feitos = historicoHoje[dia]?.checks?.filter(c => c).length || 0;
+        return feitos;
+      });
+      const canvas = `<canvas id='grafico' height='250'></canvas>`;
+      abrirModal(canvas);
+      setTimeout(() => {
+        new Chart(document.getElementById('grafico'), {
+          type: 'bar',
+          data: {
+            labels: dias,
+            datasets: [{
+              label: 'Treinos Concluídos',
+              data: dados,
+              backgroundColor: '#004085'
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true, stepSize: 1 } }
+          }
+        });
+      }, 50);
+    }
+
+    function verHistoricoCompleto() {
+      let saida = '';
+      Object.keys(localStorage).filter(k => k.startsWith('hist-')).sort().forEach(key => {
+        const data = key.split('-').slice(1).join('-');
+        const h = JSON.parse(localStorage.getItem(key));
+        saida += `===== ${data} =====\\n`;
+        for (const [dia, dados] of Object.entries(h)) {
+          saida += `\\n${dia}:\\n`;
+          dados.checks.forEach((c, i) => {
+            saida += `${c ? '✓' : '☐'} ${treinos[dia][i]}\\n`;
+          });
+          saida += `Notas: ${dados.nota || "(vazio)"}\\n`;
+        }
+        saida += `\\n`;
+      });
+      abrirModal(`<pre>${saida}</pre>`);
+    }
+
+    function exportarTXT() {
+      let conteudo = '';
+      Object.keys(localStorage).filter(k => k.startsWith('hist-')).sort().forEach(key => {
+        const data = key.split('-').slice(1).join('-');
+        const h = JSON.parse(localStorage.getItem(key));
+        conteudo += `===== ${data} =====\\n`;
+        for (const [dia, dados] of Object.entries(h)) {
+          conteudo += `\\n${dia}:\\n`;
+          dados.checks.forEach((c, i) => {
+            conteudo += `${c ? '✓' : '☐'} ${treinos[dia][i]}\\n`;
+          });
+          conteudo += `Notas: ${dados.nota || "(vazio)"}\\n`;
+        }
+        conteudo += `\\n`;
+      });
+      abrirModal(`<textarea rows='15' style='width:100%'>${conteudo}</textarea>`);
+    }
   </script>
 </body>
 </html>
